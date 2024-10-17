@@ -6,15 +6,15 @@ BEGIN
     DECLARE weighted_score FLOAT DEFAULT 0;
     
     -- Calculate the total weighted score and total weight
-    SELECT SUM(c.score * p.weight) INTO weighted_score
-    FROM corrections c
-    JOIN projects p ON c.project_id = p.id
-    WHERE c.user_id = user_id;
+    SELECT SUM(corrections.score * projects.weight) INTO weighted_score
+    FROM corrections
+    JOIN projects ON corrections.project_id = projects.id
+    WHERE corrections.user_id = user_id;
 
-    SELECT SUM(p.weight) INTO total_weight
-    FROM corrections c
-    JOIN projects p ON c.project_id = p.id
-    WHERE c.user_id = user_id;
+    SELECT SUM(projects.weight) INTO total_weight
+    FROM corrections
+    JOIN projects ON corrections.project_id = projects.id
+    WHERE corrections.user_id = user_id;
 
     -- Calculate average weighted score
     IF total_weight > 0 THEN
