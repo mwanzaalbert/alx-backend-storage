@@ -1,6 +1,6 @@
 DELIMITER //
 
-CREATE PROCEDURE ComputeAverageWeightedScoreForUser(IN input_user_id INT)
+CREATE PROCEDURE ComputeAverageWeightedScoreForUser(IN user_id INT)
 BEGIN
     DECLARE total_weight INT DEFAULT 0;
     DECLARE weighted_score FLOAT DEFAULT 0;
@@ -9,12 +9,12 @@ BEGIN
     SELECT SUM(c.score * p.weight) INTO weighted_score
     FROM corrections c
     JOIN projects p ON c.project_id = p.id
-    WHERE c.user_id = input_user_id;
+    WHERE c.user_id = user_id;
 
     SELECT SUM(p.weight) INTO total_weight
     FROM corrections c
     JOIN projects p ON c.project_id = p.id
-    WHERE c.user_id = input_user_id;
+    WHERE c.user_id = user_id;
 
     -- Calculate average weighted score
     IF total_weight > 0 THEN
@@ -26,7 +26,7 @@ BEGIN
     -- Update the user's average score
     UPDATE users
     SET average_score = weighted_score
-    WHERE id = input_user_id;
+    WHERE id = user_id;
 END //
 
 DELIMITER ;
