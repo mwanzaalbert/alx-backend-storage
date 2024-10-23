@@ -17,15 +17,16 @@ Functions:
 
 """
 
-import redis
 import requests
 from functools import wraps
+from typing import Optional, Callable, Union
+import redis
 
 # Initialize the Redis client
-redis_client = redis.Redis()
+redis_store = redis.Redis()
 
 
-def cache_page(func):
+def cache_page(func: Callable) -> Callable:
     """
     Decorator to cache the page result and count accesses.
     """
@@ -33,18 +34,18 @@ def cache_page(func):
     def wrapper(url: str) -> str:
         # Track the access count
         count_key = f"count:{url}"
-        redis_client.incr(count_key)
+        redis_store.incr(count_key)
 
         # Check if the cached result exists
-        cached_result = redis_client.get(url)
-        if cached_result:
+        cached_result = redis_store.get(url)  # redis.get() returns bytes or None
+        if cached_result is not None:
             return cached_result.decode('utf-8')
 
         # Fetch the page content
         result = func(url)
 
         # Cache the result with an expiration time of 10 seconds
-        redis_client.setex(url, 10, result)
+        redis_store.setex(url, 10, result)
         return result
 
     return wrapper
@@ -55,12 +56,18 @@ def get_page(url: str) -> str:
     """
     Fetch the HTML content of a given URL.
     """
+    # Simulating a request that returns bytes or str
     response = requests.get(url)
-    return response.text
+    data: Union[str, bytes] = response.content  # response.content returns bytes
+
+    if isinstance(data, bytes):
+        return data.decode('utf-8')  # Decode bytes to string
+    return data
 
 
 # Example usage
 if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/"
+    # Simulate slow response
+    url = "http://slowwly.robertomurray.co.uk/delay/3000"
     print(get_page(url))  # Fetch and cache the page content
     print(get_page(url))  # Should return cached content
