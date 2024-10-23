@@ -43,6 +43,8 @@ def cache_page(func):
 
         # Fetch the page content
         result = func(url)
+        
+        redis_client.set(f'count:{url}', 0)
 
         # Cache the result with an expiration time of 10 seconds
         redis_client.setex(url, 10, result)
