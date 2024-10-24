@@ -49,8 +49,11 @@ def cache_page(func):
         print("Fetching new content")  # Debug print
         result = func(url)
 
-        # Cache the result with an expiration time of 10 seconds
-        redis_client.setex(url, 10, result)
+        # Cache the result with an expiration time of 10 seconds and
+        # return status
+        status = redis_client.setex(url, 10, result)
+        if status:  # Expecting the status 'OK'
+            return "OK"
 
         # Reset the count each time a new cache entry is created
         # redis_client.set(count_key, 1)
