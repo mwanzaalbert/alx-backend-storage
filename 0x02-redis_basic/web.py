@@ -34,11 +34,11 @@ def cache_page(func):
     def wrapper(url: str) -> str:
         # Track the access count
         count_key = f"count:{url}"
-        redis_client.incr(count_key)
 
         # Check if the cached result exists
         cached_result = redis_client.get(url)
         if cached_result:
+            redis_client.incr(count_key)
             return cached_result.decode('utf-8')
 
         # Fetch the page content
@@ -46,6 +46,10 @@ def cache_page(func):
 
         # Cache the result with an expiration time of 10 seconds
         redis_client.setex(url, 10, result)
+
+        # Reset the count each time a new cache entry is created
+        redis_client.set(count_key, 1)
+
         return result
 
     return wrapper
@@ -62,17 +66,22 @@ def get_page(url: str) -> str:
 
 # Example usage
 if __name__ == "__main__":
-    # Sleep for 10 seconds to ensure the cache expires
     import time
+
     url = "http://slowwly.robertomurray.co.uk/delay/3000"
+
+    # Reset the access count manually before running
+    redis_client.delete(count_key)  # Reset access count
+    print("Access count reset.")
 
     # Fetch and cache the page content
     print(get_page(url))
-    time.sleep(10)
+    time.sleep(10)  # Sleep for 10 seconds to ensure the cache expires
 
     # Should return cached content within 10 seconds
     print(get_page(url))
-    time.sleep(10)
+    time.sleep(10)  # Sleep for 10 seconds to ensure the cache expires
+
     # Check the count of accesses from Redis
     count_key = f"count:{url}"
     print(f"Access count for {url}:" +
