@@ -35,20 +35,25 @@ def cache_page(func):
         # Track the access count
         count_key = f"count:{url}"
 
+        # Track the access count
+        redis_client.incr(count_key)
+        print(f"Incremented access count for {url}")  # Debug print
+
         # Check if the cached result exists
         cached_result = redis_client.get(url)
         if cached_result:
-            redis_client.incr(count_key)
+            print("Returning cached content")  # Debug print
             return cached_result.decode('utf-8')
 
         # Fetch the page content
+        print("Fetching new content")  # Debug print
         result = func(url)
 
         # Cache the result with an expiration time of 10 seconds
         redis_client.setex(url, 10, result)
 
         # Reset the count each time a new cache entry is created
-        redis_client.set(count_key, 1)
+        # redis_client.set(count_key, 1)
 
         return result
 
@@ -66,23 +71,24 @@ def get_page(url: str) -> str:
 
 # Example usage
 if __name__ == "__main__":
-    import time
-
     url = "http://slowwly.robertomurray.co.uk/delay/3000"
+    count_key = f"count:{url}"
 
     # Reset the access count manually before running
-    redis_client.delete(count_key)  # Reset access count
-    print("Access count reset.")
+    # redis_client.delete(count_key)  # Reset access count
+    # print("Access count reset.")
 
     # Fetch and cache the page content
-    print(get_page(url))
-    time.sleep(10)  # Sleep for 10 seconds to ensure the cache expires
-
-    # Should return cached content within 10 seconds
-    print(get_page(url))
-    time.sleep(10)  # Sleep for 10 seconds to ensure the cache expires
+    print(get_page(url))  # First call (should fetch the content and cache it)
 
     # Check the count of accesses from Redis
     count_key = f"count:{url}"
+    print(f"Access count for {url}:" +
+          f"{redis_client.get(count_key).decode('utf-8')}")
+
+    # Call again to ensure cached content is returned
+    print(get_page(url))  # Second call (should return cached content)
+
+    # Check the count again
     print(f"Access count for {url}:" +
           f"{redis_client.get(count_key).decode('utf-8')}")
