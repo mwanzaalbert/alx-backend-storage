@@ -62,14 +62,17 @@ def get_page(url: str) -> str:
 
 # Example usage
 if __name__ == "__main__":
+    # Sleep for 11 seconds to ensure the cache expires
+    import time
     url = "http://slowwly.robertomurray.co.uk/delay/3000"
 
     # Fetch and cache the page content
     print(get_page(url))
-
+    time.sleep(11)
+    
     # Should return cached content within 10 seconds
     print(get_page(url))
-
+    time.sleep(11)
     # Check the count of accesses from Redis
     count_key = f"count:{url}"
     print(f"Access count for {url}:" +
